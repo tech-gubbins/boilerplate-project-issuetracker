@@ -6,7 +6,7 @@ const server = require('../server');
 chai.use(chaiHttp);
 
 suite('Functional Tests', function () {
-	suite('POST /api/issues/{project} => object with issue data', () => {
+	suite('POST /api/issues/{project} => Create an issue', () => {
 		test('Every field filled in', (done) => {
 			chai
 				.request(server)
@@ -54,8 +54,8 @@ suite('Functional Tests', function () {
 		}).timeout(3000);
 	});
 
-	suite('GET /api/issues/{project} => Array of objects with issue data', () => {
-		test('No filter', (done) => {
+	suite('GET /api/issues/{project} => View an issue', () => {
+		test('View issues on a project', (done) => {
 			chai
 				.request(server)
 				.get('/api/issues/test')
@@ -93,7 +93,7 @@ suite('Functional Tests', function () {
 				});
 		}).timeout(3000);
 
-		test('Multiple filters (test for multiple fields you know will be in the db for a return)', (done) => {
+		test('Multiple filters', (done) => {
 			chai
 				.request(server)
 				.get('/api/issues/test')
@@ -111,7 +111,64 @@ suite('Functional Tests', function () {
 		}).timeout(3000);
 	});
 
-	suite('PUT /api/issues/{project} => text', () => {
+	suite('PUT /api/issues/{project} => Update an issue', () => {
+		test('One field to update', (done) => {
+			const id = lastObject._id;
+
+			chai
+				.request(server)
+				.put('/api/issues/test')
+				.send({
+					_id: id,
+					issue_title: 'Title',
+					issue_text: `${new Date()}`,
+					assigned_to: 'Joshua',
+					open: 'false',
+					status_text: 'In progress',
+				})
+				.end((_err, res) => {
+					assert.equal(res.status, 200);
+					done();
+				});
+		}).timeout(3000);
+
+		test('Multiple fields to update', (done) => {
+			const id = lastObject._id;
+
+			chai
+				.request(server)
+				.put('/api/issues/test')
+				.send({
+					_id: id,
+					issue_title: `${new Date()}`,
+					issue_text: `${new Date()}`,
+					assigned_to: 'Joshua',
+					open: false,
+					status_text: 'In progress',
+				})
+				.end((_err, res) => {
+					assert.equal(res.status, 200);
+					done();
+				});
+		}).timeout(3000);
+
+		test('No _id', (done) => {
+			chai
+				.request(server)
+				.put('/api/issues/test')
+				.send({
+					issue_title: 'Title',
+					issue_text: 'Text',
+					assigned_to: 'Joshua',
+					open: false,
+					status_text: 'In progress',
+				})
+				.end((_err, res) => {
+					assert.deepEqual(res.body, { error: 'missing _id' });
+					done();
+				});
+		});
+
 		test('No body and no _id', (done) => {
 			chai
 				.request(server)
@@ -143,6 +200,52 @@ suite('Functional Tests', function () {
 						error: 'could not update',
 						_id: res.body._id,
 					});
+					done();
+				});
+		}).timeout(3000);
+	});
+
+	suite('DELETE /api/issues/{project} => Delete an issue', () => {
+		test('Delete an issue', (done) => {
+			const id = lastObject._id;
+
+			chai
+				.request(server)
+				.delete('/api/issues/test')
+				.send({
+					_id: id,
+				})
+				.end((_err, res) => {
+					assert.equal(res.status, 200);
+					done();
+				});
+		}).timeout(3000);
+
+		test('Invalid _id', (done) => {
+			const id = '7758a118017dcc91079081b9';
+
+			chai
+				.request(server)
+				.delete('/api/issues/test')
+				.send({
+					_id: id,
+				})
+				.end((_err, res) => {
+					assert.deepEqual(res.body, {
+						error: 'could not delete',
+						_id: res.body._id,
+					});
+					done();
+				});
+		}).timeout(3000);
+
+		test('Missing id', (done) => {
+			chai
+				.request(server)
+				.delete('/api/issues/test')
+				.send({})
+				.end((_err, res) => {
+					assert.deepEqual(res.body, { error: 'missing _id' });
 					done();
 				});
 		}).timeout(3000);
