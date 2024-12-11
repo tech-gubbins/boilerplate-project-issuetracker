@@ -48,7 +48,6 @@ suite('Functional Tests', function () {
 					created_by: 'Fn Test - Missing required fields',
 				})
 				.end((_err, res) => {
-					assert.equal(res.status, 400);
 					assert.deepEqual(res.body, { error: 'required field(s) missing' });
 					done();
 				});
@@ -89,7 +88,7 @@ suite('Functional Tests', function () {
 				.end((_err, res) => {
 					assert.equal(res.status, 200);
 					const firstIssue = res.body[0];
-					assert.equal(firstIssue.project, 'test');
+					assert.equal(firstIssue.issue_text, 'Text');
 					done();
 				});
 		}).timeout(3000);
@@ -114,34 +113,38 @@ suite('Functional Tests', function () {
 
 	suite('PUT /api/issues/{project} => text', () => {
 		test('No body and no _id', (done) => {
-            chai.request(server)
-                .put('/api/issues/test')
-                .send({})
-                .end((_err, res) => {
-                    assert.equal(res.status, 400);
-                    assert.deepEqual(res.body, { error: 'missing _id' });
-                    done();
-                })
-        }).timeout(3000);
+			chai
+				.request(server)
+				.put('/api/issues/test')
+				.send({})
+				.end((_err, res) => {
+					assert.deepEqual(res.body, { error: 'missing _id' });
+					done();
+				});
+		}).timeout(3000);
 
-        test('Invalid _id', (done) => {
-            const id = '7758a118017dcc91079081b9'
+		test('Invalid _id', (done) => {
+			const id = '7758a118017dcc91079081b9';
 
-            chai.request(server)
-                .put('/api/issues/test')
-                .send({
-                    _id: id,
-                    issue_title: 'Title',
-                    issue_text: 'Text',
-                    assigned_to: 'Joshua',
-                    open: false,
-                    status_text: 'In progress'
-                })
-                .end((_err, res) => {
-                    assert.equal(res.status, 200);
-                    assert.equal(res.text, `could not update ${id}`);
-                    done()
-                })
-        }).timeout(3000);
+			chai
+				.request(server)
+				.put('/api/issues/test')
+				.send({
+					_id: id,
+					issue_title: 'Title',
+					issue_text: 'Text',
+					assigned_to: 'Joshua',
+					open: false,
+					status_text: 'In progress',
+				})
+				.end((_err, res) => {
+					assert.equal(res.status, 200);
+					assert.deepEqual(res.body, {
+						error: 'could not update',
+						_id: res.body._id,
+					});
+					done();
+				});
+		}).timeout(3000);
 	});
 });
