@@ -37,7 +37,6 @@ module.exports = function (app) {
 				!projectData.issue_text ||
 				!projectData.created_by
 			) {
-        res.status(400);
 				return res.send({ error: 'required field(s) missing' });
 			}
 
@@ -76,12 +75,10 @@ module.exports = function (app) {
 			delete updates._id;
 
 			if (!req.body._id) {
-        res.status(400);
 				return res.send({ error: 'missing _id' });
 			}
 
 			if (!Object.keys(updates).length) {
-        res.status(400);
 				return res.send({
 					error: 'no update field(s) sent',
 					_id: req.body._id,
@@ -115,7 +112,6 @@ module.exports = function (app) {
 		})
 		.delete(function (req, res) {
 			if (!req.body._id) {
-        res.status(404);
 				return res.send({ error: 'missing _id' });
 			}
 
@@ -129,25 +125,21 @@ module.exports = function (app) {
 							_id: ObjectId.createFromHexString(req.body._id),
 						})
 						.then((doc) => {
-							if (!doc) {
-                res.status(400);
+							if (!doc)
 								return res.send({
 									error: 'could not delete',
 									_id: req.body._id,
 								});
-              }
 							res.send({
 								result: 'successfully deleted',
 								_id: doc._id.toString(),
 							});
 						})
 						.catch((error) => {
-              res.status(400);
 							res.send({ error: 'could not delete', _id: req.body._id });
 						});
 				});
 			} catch (error) {
-        res.status(400);
 				res.send({ error: 'could not delete', _id: req.body._id });
 			}
 		});
